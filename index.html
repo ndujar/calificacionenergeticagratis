@@ -1,72 +1,103 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
-        <style>
-        #map {
-            width: '100%';
-            height: 900px;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="cnig" content="yes">
+    <title>Calificacion Energética Gratis</title>
+
+    <!-- fichero estilos -->
+    <link href="https://componentes.cnig.es/api-core/assets/css/apiign.ol.min.css" rel="stylesheet" />
+    <link href="https://componentes.cnig.es/api-core/plugins/ignsearch/ignsearch.ol.min.css" rel="stylesheet" />
+    <link href="https://componentes.cnig.es/api-core/plugins/infocatastro/infocatastro.ol.min.css" rel="stylesheet" />
+
+    <style type="text/css">
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            /* overflow: hidden; */
         }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
-        </div>
-        <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/leaflet-hash.js"></script>
+    </style>
 
-        <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+</head>
 
-        <script>
+<body>
+    <!-- Contenedor principal del mapa -->
+    <div id="mapjs" class="m-container"></div>
+    <!-- Ficheros javascript de la API -->
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/vendor/browser-polyfill.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/js/apiign.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/js/configuration.js"></script>
+    <!-- Ficheros  javascript de los plugins añadidos-->
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/ignsearch/ignsearch.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/infocatastro/infocatastro.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/attributions/attributions.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/xylocator/xylocator.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/sharemap/sharemap.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/zoomextent/zoomextent.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/mousesrs/mousesrs.ol.min.js"></script>
+    <script type="text/javascript" src="https://componentes.cnig.es/api-core/plugins/toc/toc.ol.min.js"></script>
 
-        var map = L.map('map', {
-            zoomControl:true, 
-            maxZoom:18, 
-            minZoom:1
-        }).fitBounds([[41.4241464,2.1038879],[41.3554008,2.2398276]]);
+    <script type="text/javascript">
 
-        var geocoder = L.Control.geocoder({
-            defaultMarkGeocode: false
-            })
-            .on('markgeocode', function(e) {
-                var bbox = e.geocode.bbox;
-                var poly = L.polygon([
-                bbox.getSouthEast(),
-                bbox.getNorthEast(),
-                bbox.getNorthWest(),
-                bbox.getSouthWest()
-                ]).addTo(map);
-                map.fitBounds(poly.getBounds());
-            })
-            .addTo(map);
-            
-        var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+// http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR_Distancia
+// /ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR_Distancia?SRS=string&Coordenada_X=string&Coordenada_Y=string HTTP/1.1
+        function httpGet(url)
+        {
+            const xhr = new XMLHttpRequest();
 
-        map.createPane('pane_Positron_0');
-        map.getPane('pane_Positron_0').style.zIndex = 400;
-        var layer_Positron_0 = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', {
-            pane: 'pane_Positron_0',
-            opacity: 1.0,
-            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 28
+            xhr.open('GET', url);
+            // xhr.onreadystatechange = someHandler;
+            xhr.send();
+        }
+
+        SRS = 'EPSG:25830'
+        
+        M.proxy(true);
+        const map = M.map({
+        container: 'mapjs',
+        center: {
+                x: 930537.1142581741,
+                y: 4595752.51328519,
+                draw: false
+            },
+            projection: SRS + '*d',
+            zoom: 11
         });
 
-        map.addLayer(layer_Positron_0);
+        const searchPlugin = new M.plugin.IGNSearch({
+                servicesToSearch: 'gn',
+                controls: ["scale", "location"],  
+                maxResults: 10,
+                noProcess: 'poblacion',
+                countryCode: 'es',
+                isCollapsed: false,
+                position: 'TL',
+                reverse: true,
+                urlCandidates: 'https://www.cartociudad.es/geocoder/api/geocoder/candidatesJsonp',
+                urlFind: 'https://www.cartociudad.es/geocoder/api/geocoder/findJsonp',
+                urlReverse: 'https://www.cartociudad.es/geocoder/api/geocoder/reverseGeocode'
+            });
 
+        searchPlugin.on('ignsearch:entityFound', (extent) => {
+            // eslint-disable-next-line no-alert
+            coordX = (extent[0] + extent[2]) / 2;
+            coordY = (extent[1] + extent[3]) / 2;
+            urlReferenciaCatastral = 'http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR_Distancia?SRS=' + SRS + '&Coordenada_X=' + coordX + '&Coordenada_Y=' + coordY;
+            // urlReferenciaCatastral = 'http://ovc.catastro.meh.es/ovcservweb/public-data';
+            console.log(coordX, coordY, urlReferenciaCatastral);
+            
+            resp = httpGet(urlReferenciaCatastral);
+            console.log(resp);
+            });
+
+        map.addPlugin(searchPlugin);
+
+        
         </script>
     </body>
 </html>
