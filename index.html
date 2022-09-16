@@ -45,17 +45,6 @@
 
     <script type="text/javascript">
 
-// http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR_Distancia
-// /ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR_Distancia?SRS=string&Coordenada_X=string&Coordenada_Y=string HTTP/1.1
-        function httpGet(url)
-        {
-            const xhr = new XMLHttpRequest();
-
-            xhr.open('GET', url);
-            // xhr.onreadystatechange = someHandler;
-            xhr.send();
-        }
-
         SRS = 'EPSG:25830'
         
         M.proxy(true);
@@ -92,7 +81,10 @@
             // urlReferenciaCatastral = 'http://ovc.catastro.meh.es/ovcservweb/public-data';
             console.log(coordX, coordY, urlReferenciaCatastral);
             
-            resp = httpGet(urlReferenciaCatastral);
+            // resp = httpGet(urlReferenciaCatastral);
+            resp = fetch(urlReferenciaCatastral, {
+                "method": "GET"
+            });
             console.log(resp);
             });
 
